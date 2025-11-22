@@ -1,21 +1,7 @@
 
 import json
-import os
-from typing import Any
 
+def salvar_json(dados, caminho_arquivo):
 
-def carregar_json(path: str) -> Any:
-    if not os.path.exists(path):
-        return None
-    try:
-        with open(path, 'r', encoding='utf-8') as f:
-            return json.load(f)
-    except json.JSONDecodeError:
-        # Arquivo corrompido — renomear para análise futura
-        os.rename(path, path + '.corrompido')
-        return None
-
-
-def salvar_json(path: str, data: Any):
-    with open(path, 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+    with open(caminho_arquivo, 'w', encoding='utf-8') as arquivo:
+        json.dump(dados, arquivo, indent=4, ensure_ascii=False)
