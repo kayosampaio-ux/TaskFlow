@@ -1,101 +1,153 @@
+import os
+import json
+import datetime
+ARQUIVO = "tarefas.json"
 
-from utils.arquivos import carregar_json, salvar_json
-from datetime import datetime
-import uuid
+def carregar_tarefas():
+    if os.path.exists(ARQUIVO):
+        with open(ARQUIVO, "r") as f:
+            return json.load(f)
+    return []
 
-TAREFAS_FILE = 'tarefas.json'
+def gerar_id():
+    tarefas = carregar_tarefas()
+    if not tarefas:
+        return 1
+    return max(t["id"] for t in tarefas) + 1
 
+def salvar_tarefas(tarefas):
+    with open(ARQUIVO, "w") as f:
+        json.dump(tarefas, f, indent=2)
 
-def _inicializar():
-    data = carregar_json(TAREFAS_FILE)
-    if data is None:
-        salvar_json(TAREFAS_FILE, [])
-        return []
-    return data
-
-
-def criar_tarefa(owner_username: str):
-    tarefas = _inicializar()
-    titulo = input('Título: ').strip()
-    descricao = input('Descrição (opcional): ').strip()
-    prazo = input('Data de vencimento (YYYY-MM-DD) ou vazio: ').strip()
-    tarefa = {
-        'id': uuid.uuid4().hex,
-        'owner': owner_username,
-        'titulo': titulo,
-        'descricao': descricao,
-        'criado_em': datetime.utcnow().isoformat() + 'Z',
-        'prazo': prazo if prazo else None,
-        'concluida': False,
-        'concluida_em': None
-    }
+def criar_tarefa(titulo, descricao, responsavel, prazo):
+    tarefa = {"id": gerar_id(),'titulo': titulo,"descricao": descricao,"responsavel": responsavel,"prazo": prazo,"status": "pendente"}
+    tarefas = carregar_tarefas()
     tarefas.append(tarefa)
-    salvar_json(TAREFAS_FILE, tarefas)
-    print('Tarefa criada:', tarefa['id'])
+    salvar_tarefas(tarefas)
+    print("tarefa criada")
 
-
-def listar_tarefas_usuario(owner_username: str):
-    tarefas = _inicializar()
-    minhas = [t for t in tarefas if t['owner'] == owner_username]
-    if not minhas:
-        print('Nenhuma tarefa encontrada.')
+def lista_tarefas():
+    tarefas = carregar_tarefas()
+    if not tarefas:
+        print("tarefa nao encontrada")
         return
-    for t in minhas:
-        status = 'Concluída' if t['concluida'] else 'Pendente'
-        print('---')
-        print('ID:', t['id'])
-        print('Título:', t['titulo'])
-        print('Descrição:', t['descricao'])
-        print('Prazo:', t['prazo'])
-        print('Status:', status)
-        if t['concluida']:
-            print('Concluída em:', t['concluida_em'])
+    for t in tarefas:
+        print("-" * 40)
+        print("ID:", t["id"])
+        print("titulo:", t["titulo"])
+        print("responsavel:", t["responsavel"])
+        print("descricao:", t["descricao"])
+        print("prazo:", t["prazo"])
+        print("status:", t["status"])
 
+def validar_prazo(prazo):
+    try:
+        datetime.datetime.strptime(prazo, "%Y-%m-%d")
+        return True
+    except:
+        print("data invalida")
+        return False
 
-def achar_tarefa_por_id(tarefas, id, owner_username):
-    return next((t for t in tarefas if t['id'] == id_ and t['owner'] == owner_username), None)
+def editar_tarefa(id_tarefa, novo_titulo=None, novo_prazo=None):
+    tarefas = carregar_tarefas()
+    for t in tarefas:
+        if t["id"] == id_tarefa:
+            if novo_titulo:
+                t["titulo"] = novo_titulo
+            if novo_prazo and validar_prazo(novo_prazo):
+                t["prazo"] = novo_prazo
+            salvar_tarefas(tarefas)
+            print("tarefa editada")
+            return
+    print("tarefa não encontrada")
 
+def concluir_tarefa(id_tarefa):
+    tarefas = carregar_tarefas()
 
-def editar_tarefa(owner_username: str):
-    tarefas = _inicializar()
-    id_ = input('ID da tarefa para editar: ').strip()
-    t = achar_tarefa_por_id(tarefas, id, owner_username)
-    if not t:
-        print('Tarefa não encontrada ou você não tem permissão')
+    for t in tarefas:
+        if t["id"] == id_tarefa:
+            t["status"] = "concluida"
+            salvar_tarefas(tarefas)
+            print("tarefa salva")
+            return
+    print("tarefa nao encontrada")
+
+def excluir_tarefa(id_tarefa):
+    tarefas = carregar_tarefas()
+    nova = [t for t in tarefas if t["id"] != id_tarefa]
+    if len(nova) == len(tarefas):
+        print("tarefa não encontrada")
         return
-    novo_titulo = input(f'Título [{t["titulo"]}]: ').strip() or t['titulo']
-    nova_desc = input(f'Descrição [{t["descricao"]}]: ').strip() or t['descricao']
-    novo_prazo = input(f'Prazo [{t.get("prazo")}]: ').strip() or t.get('prazo')
-    t['titulo'] = novo_titulo
-    t['descricao'] = nova_desc
-    t['prazo'] = novo_prazo
-    salvar_json(TAREFAS_FILE, tarefas)
-    print('Tarefa atualizada')
+    salvar_tarefas(nova)
+    print("tarefa salva")
+      
+def menu():
+    while True:
+        print("\n" + "-"*40)
+        print("      SISTEMA DE TAREFAS - MENU")
+        print("-"*40)
+        print("1 - Criar tarefa")
+        print("2 - Listar tarefas")
+        print("3 - Editar tarefa")
+        print("4 - Concluir tarefa")
+        print("5 - Excluir tarefa")
+        print("0 - Sair")
+        
+        opc = input("\nEscolha uma opção: ")
+
+        if opc == "1":
+            print("\n--- Criar Tarefa ---")
+            titulo = input("Título: ")
+            descricao = input("Descrição: ")
+            responsavel = input("Responsável: ")
+            prazo = input("Prazo (AAAA-MM-DD): ")
+            criar_tarefa(titulo, descricao, responsavel, prazo)
+
+        elif opc == "2":
+            print("\n--- Listar Tarefas ---")
+            lista_tarefas()
+
+        elif opc == "3":
+            print("\n--- Editar Tarefa ---")
+            try:
+                id_tarefa = int(input("ID da tarefa: "))
+            except:
+                print("ID inválido.")
+                continue
+
+            novo_titulo = input("Novo título (ou enter para manter): ")
+            novo_prazo = input("Novo prazo (AAAA-MM-DD ou enter): ")
+
+            if novo_titulo == "":
+                novo_titulo = None
+            if novo_prazo == "":
+                novo_prazo = None
+
+            editar_tarefa(id_tarefa, novo_titulo, novo_prazo)
+
+        elif opc == "4":
+            print("\n--- Concluir Tarefa ---")
+            try:
+                id_tarefa = int(input("ID da tarefa: "))
+                concluir_tarefa(id_tarefa)
+            except:
+                print("ID inválido.")
+
+        elif opc == "5":
+            print("\n--- Excluir Tarefa ---")
+            try:
+                id_tarefa = int(input("ID da tarefa: "))
+                excluir_tarefa(id_tarefa)
+            except:
+                print("ID inválido.")
+
+        elif opc == "0":
+            print("Saindo...")
+            break
+
+        else:
+            print("Opção inválida, tente novamente.")
 
 
-def excluir_tarefa(owner_username: str):
-    tarefas = _inicializar()
-    id_ = input('ID da tarefa para excluir: ').strip()
-    t = achar_tarefa_por_id(tarefas, id, owner_username)
-    if not t:
-        print('Tarefa não encontrada ou você não tem permissão')
-        return
-    tarefas.remove(t)
-    salvar_json(TAREFAS_FILE, tarefas)
-    print('Tarefa removida')
-
-
-def marcar_concluida(owner_username: str):
-    tarefas = _inicializar()
-    id_ = input('ID da tarefa para marcar como concluída: ').strip()
-    t = achar_tarefa_por_id(tarefas, id, owner_username)
-    if not t:
-        print('Tarefa não encontrada ou você não tem permissão')
-        return
-    if t['concluida']:
-        print('Tarefa já está marcada como concluída')
-        return
-    t['concluida'] = True
-    t['concluida_em'] = datetime.utcnow().isoformat() + 'Z'
-    salvar_json(TAREFAS_FILE, tarefas)
-    print('Tarefa marcada como concluída')
+# Iniciar o menu
+menu()
