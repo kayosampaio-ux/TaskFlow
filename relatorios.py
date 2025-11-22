@@ -1,32 +1,41 @@
-
-from utils.arquivos import carregar_json
-from datetime import datetime
-
-TAREFAS_FILE = 'tarefas.json'
+from tarefas import ARQUIVO
 
 
-def gerar_relatorios(username: str):
-    tarefas = carregar_json(TAREFAS_FILE) or []
-    minhas = [t for t in tarefas if t['owner'] == username]
-    totais = len(minhas)
-    concluidas = len([t for t in minhas if t['concluida']])
-    pendentes = totais - concluidas
-    atrasadas = 0
-    hoje = datetime.utcnow().date()
-    for t in minhas:
-        if t.get('prazo') and not t['concluida']:
-            try:
-                d = datetime.fromisoformat(t['prazo']).date()
-            except Exception:
-                try:
-                    d = datetime.strptime(t['prazo'], '%Y-%m-%d').date()
-                except Exception:
-                    continue
-            if d < hoje:
-                atrasadas += 1
-    print('--- Relatório de produtividade ---')
-    print('Usuário:', username)
-    print('Total de tarefas:', totais)
-    print('Concluídas:', concluidas)
-    print('Pendentes:', pendentes)
-    print('Atrasadas:',atrasadas)
+def relatorio_concluidas(tarefas):
+    texto = "TAREFAS CONCLUÍDAS\n"
+    texto += "----------------------\n"
+
+    for t in tarefas:
+        if t["status"] == "concluida":
+            texto += "- " + t["titulo"] + "\n"
+
+    return texto
+
+
+def relatorio_pendentes(tarefas):
+    texto = "TAREFAS PENDENTES\n"
+    texto += "----------------------\n"
+
+    for t in tarefas:
+        if t["status"] == "pendente":
+            texto += "- " + t["titulo"] + "\n"
+
+    return texto
+
+
+def relatorio_atrasadas(tarefas):
+    texto = "TAREFAS ATRASADAS\n"
+    texto += "----------------------\n"
+
+    for t in tarefas:
+        if t["status"] == "atrasada":
+            texto += "- " + t["titulo"] + "\n"
+
+    return texto
+
+
+def exportar_txt(texto, nome):
+    arquivo = open(nome, "w", encoding="utf-8")
+    arquivo.write(texto)
+    arquivo.close()
+    
