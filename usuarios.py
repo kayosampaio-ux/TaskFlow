@@ -1,59 +1,163 @@
+# Menu principal
 
+def main():
+    while True:
+        print("=== SISTEMA DE USUÁRIOS ===")
+        print("1 - Cadastrar")
+        print("2 - Login")
+        print("3 - Sair")
+
+        opcao = input("Escolha uma opção: ")
+
+        if opcao == "1":
+            cadastrar_usuario()
+
+        elif opcao == "2":
+            usuario = login_usuario()
+            if usuario:
+                menu_logado(usuario)
+
+        elif opcao == "3":
+            print("Seção encerrada...")
+            break
+
+        else:
+            print("Opção inválida! Tente novamente.\n")
+
+           
+import json
 import os
-import hashlib
-import uuid
-from utils.arquivos import carregar_json, salvar_json
-from datetime import datetime
-
-USUARIOS_FILE = 'usuarios.json'
 
 
-class UserExistsError(Exception):
-    pass
-
-
-class AuthenticationError(Exception):
-    pass
-
-
-def _hash_senha(senha: str, salt: str = None) -> (str, str):
-    if salt is None:
-        salt = uuid.uuid4().hex
-    h = hashlib.sha256((salt + senha).encode('utf-8')).hexdigest()
-    return h, salt
-
-
-def _inicializar():
-    data = carregar_json(USUARIOS_FILE)
-    if data is None:
-        salvar_json(USUARIOS_FILE, [])
+def carregar_usuarios():
+    if not os.path.exists("usuarios.json"):
         return []
-    return data
+    with open("usuarios.json", "r") as arquivo:
+        return json.load(arquivo)
 
+# Salvar usuários no arquivo JSON
 
-def cadastrar_usuario(username: str, nome: str, senha: str):
-    usuarios = _inicializar()
-    if any(u['username'] == username for u in usuarios):
-        raise UserExistsError('Nome de usuário já existe')
-    senha_hash, salt = _hash_senha(senha)
-    novo = {
-        'username': username,
-        'nome': nome,
-        'senha_hash': senha_hash,
-        'salt': salt,
-        'criado_em': datetime.utcnow().isoformat() + 'Z'
+def salvar_usuarios(lista):
+    with open("usuarios.json", "w") as arquivo:
+        json.dump(lista, arquivo, indent=3)
+
+# Cadastrar usuário
+
+def cadastrar_usuario():
+    print("\n=== CADASTRO DE USUÁRIO ===")
+   
+    nome = input("Nome: ").strip()
+    email = input("Email: ").strip()
+    senha = input("Senha: ").strip()
+
+    if nome == "":
+        print("Erro: o nome não pode ser vazio!")
+        return
+    if "@" not in email or "." not in email:
+        print("Erro: email inválido!")
+        return
+    if len(senha) < 3:
+        print("Erro: a senha deve conter ao menos 3 caracteres")
+        return
+
+    usuarios = carregar_usuarios()
+
+ # Verificação de e-mail já cadastrado
+    for u in usuarios:
+        if u["email"] == email:
+            print("Erro: email já cadastrado!")
+            return
+
+ # Criar usuário
+    novo_usuario = {
+        "nome": nome,
+        "email": email,
+        "senha": senha
     }
-    usuarios.append(novo)
-    salvar_json(USUARIOS_FILE, usuarios)
-    return novo
 
+    usuarios.append(novo_usuario)
+    salvar_usuarios(usuarios)
 
-def autenticar_usuario(username: str, senha: str):
-    usuarios = _inicializar()
-    u = next((x for x in usuarios if x['username'] == username), None)
-    if not u:
-        raise AuthenticationError('Usuário não encontrado')
-    senha_hash, _ = _hash_senha(senha, u['salt'])
-    if senha_hash != u['senha_hash']:
-        raise AuthenticationError('Senha incorreta')
-    return {k: v for k, v in u.items() if k not in ('senha_hash', 'salt')}
+    print("Usuário cadastrado com sucesso!\n")
+
+# Login de usuário
+
+def login_usuario():
+    print("== LOGIN ==\n")
+    email = input("Email: ").strip()
+    senha = input("Senha: ").strip()
+
+    usuarios = carregar_usuarios()
+
+    for u in usuarios:
+        if u["email"] == email and u["senha"] == senha:
+            print(f"Login bem-sucedido! {u['nome']}!\n")
+            return u
+       
+ # Retorno do usuário logado
+
+    print("Email ou senha incorretos!\n")
+    return None
+
+def excluir_usuario(usuario):
+    print("\n=== EXCLUIR USUÁRIO ===")
+    confirmacao = input("Tem certeza que deseja excluir sua conta? (s/n): ").lower()
+
+    if confirmacao != "s":
+        print("Operação cancelada.")
+        return False
+
+    usuarios = carregar_usuarios()
+
+    #  Remove o usuário
+    usuarios = [u for u in usuarios if u["email"] != usuario["email"]]
+
+    # salva o arquivo atualizado
+    salvar_usuarios(usuarios)
+
+    print("Usuário excluído com sucesso!\n")
+    return True
+
+# Menu do usuário logado
+
+def menu_logado(usuario):
+    while True:
+        print("== MENU DO SISTEMA ==\n")
+        print("1 - Ver meus dados")
+        print("2 - Alterar nome")
+        print("3 - Excluir conta")
+        print("4 - Logout")
+
+        opcao = input("Escolha uma opção: ")
+
+        if opcao == "1":
+            print("Meus dados:\n")
+            print(f"Nome: {usuario['nome']}")
+            print(f"Email: {usuario['email']}\n")
+
+        elif opcao == "2":
+            novo_nome = input("Novo nome: ").strip()
+            if novo_nome != "":
+                usuario["nome"] = novo_nome
+                usuarios = carregar_usuarios()
+
+                # Atualizar no JSON
+                for u in usuarios:
+                    if u["email"] == usuario["email"]:
+                        u["nome"] = novo_nome
+
+                salvar_usuarios(usuarios)
+                print("Nome atualizado com sucesso!\n")
+            else:
+                print("O nome não pode ser vazio!")
+               
+        elif opcao == "3":
+            if excluir_usuario(usuario):
+                break
+
+        elif opcao == "4":
+            print("Logout realizado!\n")
+            break
+
+        else:
+            print("Opção inválida!")
