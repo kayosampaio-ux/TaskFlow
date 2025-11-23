@@ -150,4 +150,5 @@ def menu():
 
 
 # Iniciar o menu
-menu()
+if __name__ == "__main__":
+    menu()
