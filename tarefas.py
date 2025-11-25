@@ -83,20 +83,17 @@ def excluir_tarefa(id_tarefa):
       
 def menu():
     while True:
-        print("\n" + "-"*40)
-        print("      SISTEMA DE TAREFAS - MENU")
-        print("-"*40)
-        print("1 - Criar tarefa")
-        print("2 - Listar tarefas")
-        print("3 - Editar tarefa")
-        print("4 - Concluir tarefa")
-        print("5 - Excluir tarefa")
+        print("\n--- MENU ---")
+        print("1 - Criar")
+        print("2 - Listar")
+        print("3 - Editar")
+        print("4 - Concluir")
+        print("5 - Excluir")
         print("0 - Sair")
-        
-        opc = input("\nEscolha uma opção: ")
+
+        opc = input("Opção: ")
 
         if opc == "1":
-            print("\n--- Criar Tarefa ---")
             titulo = input("Título: ")
             descricao = input("Descrição: ")
             responsavel = input("Responsável: ")
@@ -104,39 +101,30 @@ def menu():
             criar_tarefa(titulo, descricao, responsavel, prazo)
 
         elif opc == "2":
-            print("\n--- Listar Tarefas ---")
             lista_tarefas()
 
         elif opc == "3":
-            print("\n--- Editar Tarefa ---")
             try:
-                id_tarefa = int(input("ID da tarefa: "))
+                id_tarefa = int(input("ID: "))
             except:
                 print("ID inválido.")
                 continue
 
-            novo_titulo = input("Novo título (ou enter para manter): ")
-            novo_prazo = input("Novo prazo (AAAA-MM-DD ou enter): ")
-
-            if novo_titulo == "":
-                novo_titulo = None
-            if novo_prazo == "":
-                novo_prazo = None
+            novo_titulo = input("Novo título (enter = manter): ") or None
+            novo_prazo = input("Novo prazo (AAAA-MM-DD ou enter): ") or None
 
             editar_tarefa(id_tarefa, novo_titulo, novo_prazo)
 
         elif opc == "4":
-            print("\n--- Concluir Tarefa ---")
             try:
-                id_tarefa = int(input("ID da tarefa: "))
+                id_tarefa = int(input("ID: "))
                 concluir_tarefa(id_tarefa)
             except:
                 print("ID inválido.")
 
         elif opc == "5":
-            print("\n--- Excluir Tarefa ---")
             try:
-                id_tarefa = int(input("ID da tarefa: "))
+                id_tarefa = int(input("ID: "))
                 excluir_tarefa(id_tarefa)
             except:
                 print("ID inválido.")
@@ -144,10 +132,8 @@ def menu():
         elif opc == "0":
             print("Saindo...")
             break
-
         else:
-            print("Opção inválida, tente novamente.")
-
+            print("Opção inválida.")
 
 # Iniciar o menu
 if __name__ == "__main__":

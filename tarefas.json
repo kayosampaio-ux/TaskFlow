@@ -1,18 +1,18 @@
 [
-    {
-        "id": 1,
-        "titulo": "Trabalhão que o prof mandou",
-        "descricao": "misericordia que trabalho satanico",
-        "responsavel": "todo mundo",
-        "prazo": "ate dia 24 essa bomba",
-        "status": "concluída"
-    },
-    {
-        "id": 2,
-        "titulo": "jsbdndjs",
-        "descricao": "kjsdnosd[",
-        "responsavel": "afjsdn",
-        "prazo": "202020",
-        "status": "pendente"
-    }
+  {
+    "id": 1,
+    "titulo": "Trabalh\u00c3\u00a3o que o prof mandou",
+    "descricao": "misericordia que trabalho satanico",
+    "responsavel": "todo mundo",
+    "prazo": "ate dia 24 essa bomba",
+    "status": "conclu\u00c3\u00adda"
+  },
+  {
+    "id": 2,
+    "titulo": "jsbdndjs",
+    "descricao": "kjsdnosd[",
+    "responsavel": "afjsdn",
+    "prazo": "202020",
+    "status": "pendente"
+  }
 ]
